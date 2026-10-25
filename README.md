@@ -353,3 +353,5 @@ tail -f /var/log/setmode-sync.log                      # що шле скрип�
 ---
 
 Питання та доповнення пишіть у коментарях. Особливо цікаво порівняти з іншими версіями прошивки Puma / Jaguar / Panther Condens.
+
+Мій другий проєкт: [Deye SUN-6K-OG01 + Home Assistant](https://github.com/aviator1989/deye-og01-home-assistant).
