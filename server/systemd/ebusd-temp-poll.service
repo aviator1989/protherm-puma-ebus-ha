@@ -1,0 +1,13 @@
+[Unit]
+Description=Poll ebusd FlowTemp/ReturnTemp every 5s so dashboard temps stay fresh when boiler is idle
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ebusd-temp-poll.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

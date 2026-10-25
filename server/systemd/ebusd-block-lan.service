@@ -1,0 +1,11 @@
+[Unit]
+Description=Block LAN access to ebusd control port 8888 (localhost-only)
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'iptables -C INPUT -p tcp --dport 8888 ! -s 127.0.0.1 -j DROP 2>/dev/null || iptables -I INPUT 1 -p tcp --dport 8888 ! -s 127.0.0.1 -j DROP'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

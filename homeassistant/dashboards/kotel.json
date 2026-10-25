@@ -1,0 +1,553 @@
+{
+    "views":  [
+                  {
+                      "type":  "sections",
+                      "sections":  [
+                                       {
+                                           "type":  "grid",
+                                           "cards":  [
+                                                         {
+                                                             "type":  "heading",
+                                                             "heading":  "Protherm Puma Конденс 24/28"
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "primary":  "Пальник",
+                                                             "secondary":  "{{ \u0027Горить\u0027 if is_state(\u0027binary_sensor.kotel_polum_ia\u0027,\u0027on\u0027) else \u0027Вимкнено\u0027 }}",
+                                                             "icon":  "mdi:fire",
+                                                             "icon_color":  "{{ \u0027red\u0027 if is_state(\u0027binary_sensor.kotel_polum_ia\u0027,\u0027on\u0027) else \u0027grey\u0027 }}",
+                                                             "entity":  "binary_sensor.kotel_polum_ia",
+                                                             "card_mod":  {
+                                                                              "style":  ".secondary { color: #f1c40f !important; }"
+                                                                          },
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "primary":  "Насос",
+                                                             "secondary":  "{{ states(\u0027sensor.kotel_rezhim_nasosa\u0027) }}",
+                                                             "icon":  "mdi:pump",
+                                                             "icon_color":  "blue",
+                                                             "entity":  "sensor.kotel_rezhim_nasosa",
+                                                             "card_mod":  {
+                                                                              "style":  ".secondary { color: #f1c40f !important; }"
+                                                                          },
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "primary":  "Помилка",
+                                                             "secondary":  "{{ states(\u0027sensor.kotel_potochna_pomilka\u0027) }}",
+                                                             "icon":  "mdi:alert-circle-outline",
+                                                             "icon_color":  "{{ \u0027red\u0027 if states(\u0027sensor.kotel_potochna_pomilka\u0027) != \u0027Немає\u0027 else \u0027green\u0027 }}",
+                                                             "entity":  "sensor.kotel_potochna_pomilka",
+                                                             "card_mod":  {
+                                                                              "style":  ".secondary { color: #f1c40f !important; }"
+                                                                          },
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "primary":  "Тиск води",
+                                                             "secondary":  "{{ states(\u0027sensor.kotel_tisk_vodi\u0027) }} bar",
+                                                             "icon":  "mdi:gauge",
+                                                             "icon_color":  "{% set p = states(\u0027sensor.kotel_tisk_vodi\u0027)|float(0) %}{% if p \u003c 0.5 %}red{% elif p \u003c 1 %}amber{% elif p \u003c= 2.2 %}green{% else %}red{% endif %}",
+                                                             "entity":  "sensor.kotel_tisk_vodi",
+                                                             "card_mod":  {
+                                                                              "style":  ".secondary { color: #f1c40f !important; }"
+                                                                          },
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "gauge",
+                                                             "entity":  "sensor.kotel_navantazhennia_faktychne",
+                                                             "name":  "Навантаження",
+                                                             "min":  0,
+                                                             "max":  100,
+                                                             "severity":  {
+                                                                              "green":  0,
+                                                                              "yellow":  60,
+                                                                              "red":  90
+                                                                          }
+                                                         }
+                                                     ]
+                                       },
+                                       {
+                                           "type":  "grid",
+                                           "cards":  [
+                                                         {
+                                                             "type":  "heading",
+                                                             "heading":  "Опалення за погодою"
+                                                         },
+                                                         {
+                                                             "type":  "tile",
+                                                             "entity":  "input_boolean.opalennia_za_pogodoiu",
+                                                             "name":  "Опалення за погодою",
+                                                             "icon":  "mdi:weather-partly-snowy",
+                                                             "tap_action":  {
+                                                                                "action":  "toggle"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "tile",
+                                                             "entity":  "sensor.heating_weather_target",
+                                                             "name":  "Котел за кривою",
+                                                             "icon":  "mdi:home-thermometer"
+                                                         },
+                                                         {
+                                                             "type":  "tile",
+                                                             "entity":  "sensor.outdoor_temperature",
+                                                             "name":  "Вулиця зараз",
+                                                             "icon":  "mdi:thermometer"
+                                                         },
+                                                         {
+                                                             "type":  "tile",
+                                                             "entity":  "sensor.outdoor_temperature_12h",
+                                                             "name":  "Вулиця, прогноз 12 год",
+                                                             "icon":  "mdi:weather-cloudy-clock"
+                                                         }
+                                                     ]
+                                       },
+                                       {
+                                           "type":  "grid",
+                                           "cards":  [
+                                                         {
+                                                             "type":  "heading",
+                                                             "heading":  "Температури"
+                                                         },
+                                                         {
+                                                             "type":  "custom:mini-graph-card",
+                                                             "name":  "Подача (факт)",
+                                                             "entities":  [
+                                                                              {
+                                                                                  "entity":  "sensor.kotel_temperatura_podachi_fakt",
+                                                                                  "color":  "#f1c40f"
+                                                                              },
+                                                                              {
+                                                                                  "entity":  "sensor.kotel_temperatura_podachi_zadana",
+                                                                                  "color":  "#4caf50",
+                                                                                  "name":  "Задана"
+                                                                              }
+                                                                          ],
+                                                             "line_width":  3,
+                                                             "hours_to_show":  24,
+                                                             "points_per_hour":  4,
+                                                             "show":  {
+                                                                          "labels":  true,
+                                                                          "extrema":  true,
+                                                                          "legend":  true
+                                                                      }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mini-graph-card",
+                                                             "name":  "Обратка",
+                                                             "entities":  [
+                                                                              {
+                                                                                  "entity":  "sensor.kotel_temperatura_obratki",
+                                                                                  "color":  "#00bfff"
+                                                                              }
+                                                                          ],
+                                                             "line_width":  3,
+                                                             "hours_to_show":  24,
+                                                             "points_per_hour":  4,
+                                                             "show":  {
+                                                                          "labels":  true,
+                                                                          "extrema":  true
+                                                                      }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mini-graph-card",
+                                                             "name":  "ГВП — задана температура",
+                                                             "entities":  [
+                                                                              {
+                                                                                  "entity":  "sensor.kotel_gvp_zadana_temperatura",
+                                                                                  "color":  "#ff8c00"
+                                                                              }
+                                                                          ],
+                                                             "line_width":  3,
+                                                             "hours_to_show":  24,
+                                                             "points_per_hour":  4,
+                                                             "show":  {
+                                                                          "labels":  true,
+                                                                          "extrema":  true
+                                                                      }
+                                                         }
+                                                     ]
+                                       },
+                                       {
+                                           "type":  "grid",
+                                           "cards":  [
+                                                         {
+                                                             "type":  "heading",
+                                                             "heading":  "Газ (розрахунково)"
+                                                         },
+                                                         {
+                                                             "type":  "custom:apexcharts-card",
+                                                             "header":  {
+                                                                            "show":  true,
+                                                                            "title":  "Витрата газу — сьогодні",
+                                                                            "show_states":  true,
+                                                                            "colorize_states":  true
+                                                                        },
+                                                             "graph_span":  "24h",
+                                                             "span":  {
+                                                                          "start":  "day"
+                                                                      },
+                                                             "now":  {
+                                                                         "show":  true,
+                                                                         "label":  "Зараз",
+                                                                         "color":  "#ff0000"
+                                                                     },
+                                                             "yaxis":  [
+                                                                           {
+                                                                               "min":  0,
+                                                                               "max":  "auto",
+                                                                               "decimals":  2
+                                                                           }
+                                                                       ],
+                                                             "series":  [
+                                                                            {
+                                                                                "entity":  "sensor.kotel_rozrakhunkova_vitrata_gazu",
+                                                                                "name":  "Витрата (м³/год)",
+                                                                                "type":  "area",
+                                                                                "color":  "#2a78d6",
+                                                                                "stroke_width":  2,
+                                                                                "extend_to":  "now",
+                                                                                "curve":  "stepline"
+                                                                            }
+                                                                        ]
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "primary":  "Витрачено сьогодні",
+                                                             "secondary":  "{{ states(\u0027sensor.kotel_gas_daily\u0027) }} м³ · {{ (states(\u0027sensor.kotel_gas_daily\u0027) | float(0) * states(\u0027input_number.kotel_gaz_tsina\u0027) | float(0)) | round(2) }} грн",
+                                                             "icon":  "mdi:meter-gas",
+                                                             "icon_color":  "blue",
+                                                             "entity":  "sensor.kotel_gas_daily",
+                                                             "card_mod":  {
+                                                                              "style":  ".secondary { color: #f1c40f !important; }"
+                                                                          },
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "primary":  "Газ: з початку місяця",
+                                                             "secondary":  "{{ states(\u0027sensor.kotel_gas_monthly\u0027) }} м³ · {{ (states(\u0027sensor.kotel_gas_monthly\u0027) | float(0) * states(\u0027input_number.kotel_gaz_tsina\u0027) | float(0)) | round(2) }} грн",
+                                                             "icon":  "mdi:gas-cylinder",
+                                                             "icon_color":  "orange",
+                                                             "entity":  "sensor.kotel_gas_monthly",
+                                                             "card_mod":  {
+                                                                              "style":  ".secondary { color: #f1c40f !important; }"
+                                                                          },
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "tile",
+                                                             "entity":  "input_number.kotel_gaz_tsina",
+                                                             "name":  "Ціна газу",
+                                                             "icon":  "mdi:cash",
+                                                             "features":  [
+                                                                              {
+                                                                                  "type":  "numeric-input",
+                                                                                  "style":  "buttons"
+                                                                              }
+                                                                          ]
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "primary":  "Газ: реальний лічильник",
+                                                             "secondary":  "{{ states(\u0027input_number.kotel_gaz_realnyi_lichylnyk\u0027) }} м³ (натисни, щоб оновити)",
+                                                             "icon":  "mdi:counter",
+                                                             "icon_color":  "green",
+                                                             "entity":  "input_number.kotel_gaz_realnyi_lichylnyk",
+                                                             "card_mod":  {
+                                                                              "style":  ".secondary { color: #f1c40f !important; }"
+                                                                          },
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         }
+                                                     ]
+                                       },
+                                       {
+                                           "type":  "grid",
+                                           "cards":  [
+                                                         {
+                                                             "type":  "heading",
+                                                             "heading":  "Вода (ГВП)"
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "primary":  "Витрата зараз",
+                                                             "secondary":  "{{ states(\u0027sensor.kotel_vitrata_gariachoi_vodi\u0027) }} л/хв",
+                                                             "icon":  "mdi:water-pump",
+                                                             "icon_color":  "cyan",
+                                                             "entity":  "sensor.kotel_vitrata_gariachoi_vodi",
+                                                             "card_mod":  {
+                                                                              "style":  ".secondary { color: #f1c40f !important; }"
+                                                                          },
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "primary":  "Вода за сьогодні",
+                                                             "secondary":  "{{ states(\u0027sensor.kotel_water_daily\u0027) }} л",
+                                                             "icon":  "mdi:water",
+                                                             "icon_color":  "blue",
+                                                             "entity":  "sensor.kotel_water_daily",
+                                                             "card_mod":  {
+                                                                              "style":  ".secondary { color: #f1c40f !important; }"
+                                                                          },
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "primary":  "Вода за цей місяць",
+                                                             "secondary":  "{{ states(\u0027sensor.kotel_water_monthly\u0027) }} л",
+                                                             "icon":  "mdi:water-circle",
+                                                             "icon_color":  "blue",
+                                                             "entity":  "sensor.kotel_water_monthly",
+                                                             "card_mod":  {
+                                                                              "style":  ".secondary { color: #f1c40f !important; }"
+                                                                          },
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "primary":  "Запусків ГВП сьогодні",
+                                                             "secondary":  "{{ states(\u0027sensor.kotel_zapuskiv_gvp_sogodni\u0027) | int(0) }} · за годину {{ states(\u0027sensor.kotel_zapuskiv_gvp_za_godinu\u0027) | int(0) }}",
+                                                             "icon":  "mdi:fire",
+                                                             "icon_color":  "orange",
+                                                             "entity":  "sensor.kotel_zapuskiv_gvp_sogodni",
+                                                             "card_mod":  {
+                                                                              "style":  ".secondary { color: #f1c40f !important; }"
+                                                                          },
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "primary":  "Перегрівів ГВП (≥85 °C)",
+                                                             "secondary":  "сьогодні {{ states(\u0027sensor.kotel_peregriviv_gvp_sogodni\u0027) | int(0) }} · за 7 днів {{ states(\u0027sensor.kotel_peregriviv_gvp_za_7_dniv\u0027) | int(0) }}",
+                                                             "icon":  "mdi:thermometer-alert",
+                                                             "icon_color":  "red",
+                                                             "entity":  "sensor.kotel_peregriviv_gvp_za_7_dniv",
+                                                             "card_mod":  {
+                                                                              "style":  ".secondary { color: #f1c40f !important; }"
+                                                                          },
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         }
+                                                     ]
+                                       },
+                                       {
+                                           "type":  "grid",
+                                           "cards":  [
+                                                         {
+                                                             "type":  "heading",
+                                                             "heading":  "Напрацювання та діагностика"
+                                                         },
+                                                         {
+                                                             "type":  "entities",
+                                                             "title":  "Лічильники",
+                                                             "entities":  [
+                                                                              {
+                                                                                  "entity":  "sensor.kotel_godin_roboti_opalennia",
+                                                                                  "name":  "Годин опалення"
+                                                                              },
+                                                                              {
+                                                                                  "entity":  "sensor.kotel_godin_roboti_gvp",
+                                                                                  "name":  "Годин ГВП"
+                                                                              },
+                                                                              {
+                                                                                  "entity":  "sensor.kotel_godin_roboti_nasosa",
+                                                                                  "name":  "Годин роботи насоса"
+                                                                              },
+                                                                              {
+                                                                                  "entity":  "sensor.kotel_zapuskiv_opalennia",
+                                                                                  "name":  "Запусків опалення"
+                                                                              },
+                                                                              {
+                                                                                  "entity":  "sensor.kotel_zapuskiv_gvp",
+                                                                                  "name":  "Запусків ГВП"
+                                                                              }
+                                                                          ]
+                                                         }
+                                                     ]
+                                       },
+                                       {
+                                           "type":  "grid",
+                                           "cards":  [
+                                                         {
+                                                             "type":  "heading",
+                                                             "heading":  "Ручне керування (ebus)"
+                                                         },
+                                                         {
+                                                             "type":  "thermostat",
+                                                             "entity":  "climate.kotel_opalennia",
+                                                             "name":  "Опалення (подача)",
+                                                             "features":  [
+                                                                              {
+                                                                                  "type":  "climate-hvac-modes",
+                                                                                  "hvac_modes":  [
+                                                                                                     "off",
+                                                                                                     "heat"
+                                                                                                 ]
+                                                                              }
+                                                                          ]
+                                                         },
+                                                         {
+                                                             "type":  "thermostat",
+                                                             "entity":  "climate.kotel_gvp",
+                                                             "name":  "Гаряча вода",
+                                                             "features":  [
+                                                                              {
+                                                                                  "type":  "climate-hvac-modes",
+                                                                                  "hvac_modes":  [
+                                                                                                     "off",
+                                                                                                     "heat"
+                                                                                                 ]
+                                                                              }
+                                                                          ]
+                                                         }
+                                                     ]
+                                       },
+                                       {
+                                           "type":  "grid",
+                                           "cards":  [
+                                                         {
+                                                             "type":  "heading",
+                                                             "heading":  "Порівняння: Status01 vs прямі параметри"
+                                                         },
+                                                         {
+                                                             "type":  "custom:mini-graph-card",
+                                                             "name":  "Подача: факт vs Status01",
+                                                             "entities":  [
+                                                                              {
+                                                                                  "entity":  "sensor.kotel_temperatura_podachi_fakt",
+                                                                                  "color":  "#f1c40f",
+                                                                                  "name":  "FlowTemp"
+                                                                              },
+                                                                              {
+                                                                                  "entity":  "sensor.kotel_temperatura_podachi_status01",
+                                                                                  "color":  "#e74c3c",
+                                                                                  "name":  "Status01"
+                                                                              }
+                                                                          ],
+                                                             "line_width":  3,
+                                                             "hours_to_show":  24,
+                                                             "points_per_hour":  4,
+                                                             "show":  {
+                                                                          "labels":  true,
+                                                                          "extrema":  true,
+                                                                          "legend":  true
+                                                                      }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mini-graph-card",
+                                                             "name":  "Обратка: факт vs Status01",
+                                                             "entities":  [
+                                                                              {
+                                                                                  "entity":  "sensor.kotel_temperatura_obratki",
+                                                                                  "color":  "#00bfff",
+                                                                                  "name":  "ReturnTemp"
+                                                                              },
+                                                                              {
+                                                                                  "entity":  "sensor.kotel_temperatura_obratki_status01",
+                                                                                  "color":  "#9b59b6",
+                                                                                  "name":  "Status01"
+                                                                              }
+                                                                          ],
+                                                             "line_width":  3,
+                                                             "hours_to_show":  24,
+                                                             "points_per_hour":  4,
+                                                             "show":  {
+                                                                          "labels":  true,
+                                                                          "extrema":  true,
+                                                                          "legend":  true
+                                                                      }
+                                                         }
+                                                     ]
+                                       },
+                                       {
+                                           "type":  "grid",
+                                           "cards":  [
+                                                         {
+                                                             "type":  "heading",
+                                                             "heading":  "Ресурс котла"
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "entity":  "sensor.kotel_resurs_ventyliator",
+                                                             "primary":  "Вентилятор",
+                                                             "secondary":  "{% set a = states[\u0027sensor.kotel_resurs_ventyliator\u0027].attributes %}Залишилось {{ states(\u0027sensor.kotel_resurs_ventyliator\u0027) }}% · {% set y = states(\u0027sensor.kotel_resurs_ventyliator_roky\u0027) %}{% if y | is_number %}~{{ y | float | round(0) | int if y | float \u003e= 10 else y }} р.{% else %}—{% endif %}\n{{ a[\u0027використано\u0027] }} з {{ a[\u0027ресурс\u0027] }} {{ a[\u0027одиниця\u0027] }} · {{ a[\u0027темп_за_рік\u0027] }}/рік",
+                                                             "multiline_secondary":  true,
+                                                             "icon":  "mdi:fan",
+                                                             "icon_color":  "{% set p = states(\u0027sensor.kotel_resurs_ventyliator\u0027) | float(0) %}{{ \u0027green\u0027 if p \u003e= 50 else (\u0027amber\u0027 if p \u003e= 20 else \u0027red\u0027) }}",
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "entity":  "sensor.kotel_resurs_zapaliuvannia",
+                                                             "primary":  "Запалювання / газовий клапан",
+                                                             "secondary":  "{% set a = states[\u0027sensor.kotel_resurs_zapaliuvannia\u0027].attributes %}Залишилось {{ states(\u0027sensor.kotel_resurs_zapaliuvannia\u0027) }}% · {% set y = states(\u0027sensor.kotel_resurs_zapaliuvannia_roky\u0027) %}{% if y | is_number %}~{{ y | float | round(0) | int if y | float \u003e= 10 else y }} р.{% else %}—{% endif %}\n{{ a[\u0027використано\u0027] }} з {{ a[\u0027ресурс\u0027] }} {{ a[\u0027одиниця\u0027] }} · {{ a[\u0027темп_за_рік\u0027] }}/рік",
+                                                             "multiline_secondary":  true,
+                                                             "icon":  "mdi:fire",
+                                                             "icon_color":  "{% set p = states(\u0027sensor.kotel_resurs_zapaliuvannia\u0027) | float(0) %}{{ \u0027green\u0027 if p \u003e= 50 else (\u0027amber\u0027 if p \u003e= 20 else \u0027red\u0027) }}",
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "entity":  "sensor.kotel_resurs_nasos",
+                                                             "primary":  "Насос",
+                                                             "secondary":  "{% set a = states[\u0027sensor.kotel_resurs_nasos\u0027].attributes %}Залишилось {{ states(\u0027sensor.kotel_resurs_nasos\u0027) }}% · {% set y = states(\u0027sensor.kotel_resurs_nasos_roky\u0027) %}{% if y | is_number %}~{{ y | float | round(0) | int if y | float \u003e= 10 else y }} р.{% else %}—{% endif %}\n{{ a[\u0027використано\u0027] }} з {{ a[\u0027ресурс\u0027] }} {{ a[\u0027одиниця\u0027] }} · {{ a[\u0027темп_за_рік\u0027] }}/рік",
+                                                             "multiline_secondary":  true,
+                                                             "icon":  "mdi:pump",
+                                                             "icon_color":  "{% set p = states(\u0027sensor.kotel_resurs_nasos\u0027) | float(0) %}{{ \u0027green\u0027 if p \u003e= 50 else (\u0027amber\u0027 if p \u003e= 20 else \u0027red\u0027) }}",
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         },
+                                                         {
+                                                             "type":  "custom:mushroom-template-card",
+                                                             "entity":  "sensor.kotel_resurs_klapan_3h",
+                                                             "primary":  "Триходовий клапан",
+                                                             "secondary":  "{% set a = states[\u0027sensor.kotel_resurs_klapan_3h\u0027].attributes %}Залишилось {{ states(\u0027sensor.kotel_resurs_klapan_3h\u0027) }}% · {% set y = states(\u0027sensor.kotel_resurs_klapan_3h_roky\u0027) %}{% if y | is_number %}~{{ y | float | round(0) | int if y | float \u003e= 10 else y }} р.{% else %}—{% endif %}\n{{ a[\u0027використано\u0027] }} з {{ a[\u0027ресурс\u0027] }} {{ a[\u0027одиниця\u0027] }} · {{ a[\u0027темп_за_рік\u0027] }}/рік",
+                                                             "multiline_secondary":  true,
+                                                             "icon":  "mdi:valve",
+                                                             "icon_color":  "{% set p = states(\u0027sensor.kotel_resurs_klapan_3h\u0027) | float(0) %}{{ \u0027green\u0027 if p \u003e= 50 else (\u0027amber\u0027 if p \u003e= 20 else \u0027red\u0027) }}",
+                                                             "tap_action":  {
+                                                                                "action":  "more-info"
+                                                                            }
+                                                         }
+                                                     ]
+                                       }
+                                   ],
+                      "theme":  "kotel_dark"
+                  }
+              ]
+}

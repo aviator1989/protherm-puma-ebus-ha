@@ -1,0 +1,13 @@
+[Unit]
+Description=Fast poll ebusd Flame/HwcDemand for near-realtime dashboard
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ebusd-flame-poll.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

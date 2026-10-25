@@ -1,0 +1,2 @@
+5 * * * * root /usr/bin/python3 /root/heating_log/heating_daily.py >> /root/heating_log/cron.log 2>&1
+35 * * * * root /usr/bin/python3 /root/heating_log/wear.py >> /root/heating_log/cron.log 2>&1

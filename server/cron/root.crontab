@@ -1,0 +1,10 @@
+# crontab root: рідкісні примусові читання, щоб значення в MQTT не застарівали
+*/2 * * * * docker exec -i ebusd ebusctl read StorageTempDesired > /dev/null 2>&1
+*/2 * * * * docker exec -i ebusd ebusctl read HwcWaterflow > /dev/null 2>&1
+0 * * * * docker exec -i ebusd ebusctl read -c bai -f HcHours > /dev/null 2>&1
+0 * * * * docker exec -i ebusd ebusctl read -c bai -f HwcHours > /dev/null 2>&1
+0 * * * * docker exec -i ebusd ebusctl read -c bai -f PumpHours > /dev/null 2>&1
+0 * * * * docker exec -i ebusd ebusctl read -c bai -f HcStarts > /dev/null 2>&1
+0 * * * * docker exec -i ebusd ebusctl read -c bai -f HwcStarts > /dev/null 2>&1
+0 * * * * docker exec -i ebusd ebusctl read -c bai -f Currenterror > /dev/null 2>&1
+0 * * * * docker exec -i ebusd ebusctl read -c bai -f IonisationVoltageLevel > /dev/null 2>&1

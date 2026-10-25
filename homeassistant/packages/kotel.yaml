@@ -1,0 +1,756 @@
+# Protherm Puma Condens 24/28 через ebusd (MQTT) — пакет Home Assistant.
+# Підключення в configuration.yaml:
+#   homeassistant:
+#     packages: !include_dir_named packages
+# Замініть notify.mobile_app_YOUR_PHONE на свій сервіс сповіщень, а координати в rest — на свої.
+# Потрібно: інтеграція MQTT, ebusd з --mqttjson і --mqttint=mqtt-hassio.cfg
+# (binary_sensor.ebusd_global_signal / _running приходять з його автодискавері).
+
+# ---------------------------------------------------------------- MQTT
+mqtt:
+  sensor:
+    - name: "Котел: Тиск води"
+      unique_id: kotel_tisk_vodi
+      state_topic: "ebusd/bai/WaterPressure"
+      value_template: "{{ value_json.press.value }}"
+      unit_of_measurement: "bar"
+      device_class: pressure
+      state_class: measurement
+
+    - name: "Котел: Температура подачі (факт)"
+      unique_id: kotel_temperatura_podachi_fakt
+      state_topic: "ebusd/bai/FlowTemp"
+      value_template: "{{ value_json.temp.value }}"
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+
+    - name: "Котел: Температура подачі (задана)"
+      unique_id: kotel_temperatura_podachi_zadana
+      state_topic: "ebusd/bai/FlowTempDesired"
+      value_template: "{{ value_json.value.value }}"
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+
+    - name: "Котел: Температура обратки"
+      unique_id: kotel_temperatura_obratki
+      state_topic: "ebusd/bai/ReturnTemp"
+      value_template: "{{ value_json.temp.value }}"
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+
+    - name: "Котел: Температура подачі (Status01)"
+      unique_id: kotel_temperatura_podachi_status01
+      state_topic: "ebusd/bai/Status01"
+      value_template: "{{ value_json.temp.value }}"
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+
+    - name: "Котел: Температура обратки (Status01)"
+      unique_id: kotel_temperatura_obratky_status01
+      state_topic: "ebusd/bai/Status01"
+      value_template: "{{ value_json.temp_1.value }}"
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+
+    - name: "Котел: Навантаження (модуляція)"
+      unique_id: kotel_navantazhennia_moduliatsiia
+      state_topic: "ebusd/bai/ModulationDesired"
+      value_template: "{{ value_json.value.value }}"
+      unit_of_measurement: "%"
+      state_class: measurement
+
+    - name: "Котел: ГВП задана температура"
+      unique_id: kotel_gvp_zadana_temperatura
+      state_topic: "ebusd/bai/StorageTempDesired"
+      value_template: "{{ value_json.value.value }}"
+      unit_of_measurement: "°C"
+      device_class: temperature
+
+    - name: "Котел: Режим насоса"
+      unique_id: kotel_rezhim_nasosa
+      state_topic: "ebusd/bai/PumpPowerDesired"
+      value_template: "{{ value_json.value.value }}"
+
+    - name: "Котел: Годин роботи опалення"
+      unique_id: kotel_hchours
+      state_topic: "ebusd/bai/HcHours"
+      value_template: "{{ value_json.value.value }}"
+      unit_of_measurement: "год"
+      icon: mdi:radiator
+      state_class: total_increasing
+
+    - name: "Котел: Годин роботи ГВП"
+      unique_id: kotel_hwchours
+      state_topic: "ebusd/bai/HwcHours"
+      value_template: "{{ value_json.value.value }}"
+      unit_of_measurement: "год"
+      icon: mdi:water-boiler
+      state_class: total_increasing
+
+    - name: "Котел: Годин роботи насоса"
+      unique_id: kotel_pumphours
+      state_topic: "ebusd/bai/PumpHours"
+      value_template: "{{ value_json.value.value }}"
+      unit_of_measurement: "год"
+      icon: mdi:pump
+      state_class: total_increasing
+
+    - name: "Котел: Запусків опалення"
+      unique_id: kotel_hcstarts
+      state_topic: "ebusd/bai/HcStarts"
+      value_template: "{{ value_json.value.value }}"
+      icon: mdi:counter
+      state_class: total_increasing
+
+    - name: "Котел: Запусків ГВП"
+      unique_id: kotel_hwcstarts
+      state_topic: "ebusd/bai/HwcStarts"
+      value_template: "{{ value_json.value.value }}"
+      icon: mdi:counter
+      state_class: total_increasing
+
+    - name: "Котел: Поточна помилка"
+      unique_id: kotel_currenterror
+      state_topic: "ebusd/bai/Currenterror"
+      value_template: "{{ value_json.error.value or 'Немає' }}"
+      icon: mdi:alert-circle-outline
+
+    - name: "Котел: Рівень іонізації полум'я"
+      unique_id: kotel_ionisationvoltagelevel
+      state_topic: "ebusd/bai/IonisationVoltageLevel"
+      value_template: "{{ value_json.value.value }}"
+      unit_of_measurement: "µA"
+      icon: mdi:fire
+      state_class: measurement
+
+    # HwcWaterflow без полум'я іноді показує залишкове значення -> 0
+    - name: "Котел: Витрата гарячої води"
+      unique_id: kotel_hwc_waterflow_rate
+      state_topic: "ebusd/bai/HwcWaterflow"
+      value_template: >-
+        {% if is_state('binary_sensor.kotel_polum_ia', 'on') %}
+          {{ value_json.value.value }}
+        {% else %}
+          0
+        {% endif %}
+      unit_of_measurement: "L/min"
+      icon: mdi:water-pump
+      state_class: measurement
+
+    - name: "Котел: Спрацювання термообмежувача (STB)"
+      unique_id: kotel_deactivationstemplimiter
+      state_topic: "ebusd/bai/DeactivationsTemplimiter"
+      value_template: "{{ value_json.value.value }}"
+      icon: mdi:shield-alert
+      state_class: total_increasing
+
+    - name: "Котел: Невдалі запалення (загалом)"
+      unique_id: kotel_deactivationsifc
+      state_topic: "ebusd/bai/DeactivationsIFC"
+      value_template: "{{ value_json.value.value }}"
+      icon: mdi:fire-alert
+      state_class: total_increasing
+
+    - name: "Котел: Невдалі запалення (спроба 1)"
+      unique_id: kotel_counterstartattempts1
+      state_topic: "ebusd/bai/CounterStartattempts1"
+      value_template: "{{ value_json.value.value }}"
+      icon: mdi:fire-alert
+      state_class: total_increasing
+
+    - name: "Котел: Невдалі запалення (спроба 2)"
+      unique_id: kotel_counterstartattempts2
+      state_topic: "ebusd/bai/CounterStartattempts2"
+      value_template: "{{ value_json.value.value }}"
+      icon: mdi:fire-alert
+      state_class: total_increasing
+
+    - name: "Котел: Невдалі запалення (спроба 3)"
+      unique_id: kotel_counterstartattempts3
+      state_topic: "ebusd/bai/CounterStartAttempts3"
+      value_template: "{{ value_json.value.value }}"
+      icon: mdi:fire-alert
+      state_class: total_increasing
+
+    - name: "Котел: Невдалі запалення (спроба 4)"
+      unique_id: kotel_counterstartattempts4
+      state_topic: "ebusd/bai/CounterStartAttempts4"
+      value_template: "{{ value_json.value.value }}"
+      icon: mdi:fire-alert
+      state_class: total_increasing
+
+    - name: "Котел: Позиція 3-ходового клапана"
+      unique_id: kotel_positionvalveset
+      state_topic: "ebusd/bai/PositionValveSet"
+      value_template: "{{ value_json.value.value }}"
+      icon: mdi:valve
+
+  binary_sensor:
+    - name: "Котел: Полум'я"
+      unique_id: kotel_polum_ia
+      state_topic: "ebusd/bai/Flame"
+      value_template: "{{ value_json.value.value }}"
+      payload_on: "on"
+      payload_off: "off"
+
+  # Круглі термостати: лише обгортка над ручними хелперами нижче.
+  # Команди -> автоматизація kotel_termostaty_komandy -> хелпери -> setmode-sync.py
+  # Стан публікує автоматизація kotel_termostaty_stan (топіки ha/kotel/...).
+  climate:
+    - name: "Котел: Опалення"
+      unique_id: kotel_climate_opalennia
+      modes: ["off", "heat"]
+      mode_command_topic: "ha/kotel/opalennia/mode/set"
+      mode_state_topic: "ha/kotel/opalennia/mode"
+      temperature_command_topic: "ha/kotel/opalennia/temp/set"
+      temperature_state_topic: "ha/kotel/opalennia/temp"
+      current_temperature_topic: "ebusd/bai/FlowTemp"
+      current_temperature_template: "{{ value_json.temp.value }}"
+      action_topic: "ha/kotel/opalennia/action"
+      min_temp: 35
+      max_temp: 60
+      temp_step: 1
+      precision: 1.0
+      temperature_unit: C
+
+    - name: "Котел: ГВП"
+      unique_id: kotel_climate_gvp
+      icon: mdi:water-boiler
+      modes: ["off", "heat"]
+      mode_command_topic: "ha/kotel/gvp/mode/set"
+      mode_state_topic: "ha/kotel/gvp/mode"
+      temperature_command_topic: "ha/kotel/gvp/temp/set"
+      temperature_state_topic: "ha/kotel/gvp/temp"
+      action_topic: "ha/kotel/gvp/action"
+      min_temp: 35
+      max_temp: 55
+      temp_step: 1
+      precision: 1.0
+      temperature_unit: C
+
+# ---------------------------------------------------------------- Хелпери
+# Їх читає setmode-sync.py (з бази recorder). Назви сутностей мають збігатися зі скриптом.
+input_boolean:
+  boiler_heating_switch:
+    name: "Котел: опалення — ручне керування"
+    icon: mdi:fire
+  zapit_na_gvp_kotla:
+    name: "Котел: ГВП — ручне керування"
+    icon: mdi:fire
+  opalennia_za_pogodoiu:
+    name: "Опалення за погодою"
+    icon: mdi:weather-partly-snowy
+  kotel_zv_iazok_vtracheno:
+    name: "Котел: зв'язок втрачено"
+    icon: mdi:lan-disconnect
+
+input_number:
+  boiler_heating_temp:
+    name: "Котел: температура подачі (ручна)"
+    min: 35
+    max: 60
+    step: 1
+    unit_of_measurement: "°C"
+  temperatura_gvp_kotla:
+    name: "Котел: температура ГВП (ручна)"
+    min: 35
+    max: 55          # котел однаково обрізає до 55 (d.20)
+    step: 1
+    unit_of_measurement: "°C"
+  kotel_gaz_realnyi_lichylnyk:
+    name: "Котел: Газ (реальний лічильник)"
+    min: 0
+    max: 999999
+    step: 0.01
+    unit_of_measurement: "m³"
+    icon: mdi:meter-gas
+    mode: box
+  kotel_gaz_tsina:
+    name: "Котел: ціна газу"
+    min: 0
+    max: 50
+    step: 0.01
+    unit_of_measurement: "грн/м³"
+    icon: mdi:cash
+    mode: box
+
+# ---------------------------------------------------------------- Погода
+rest:
+  # 12 год прогнозу, бо тепла підлога інертна. Координати — свої.
+  - resource: https://api.open-meteo.com/v1/forecast?latitude=50.45&longitude=30.52&current=temperature_2m&hourly=temperature_2m&forecast_hours=12&timezone=Europe%2FKyiv
+    scan_interval: 900
+    timeout: 30
+    sensor:
+      - name: "Outdoor temperature"
+        unique_id: vulytsia_temperatura
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        value_template: "{{ value_json.current.temperature_2m }}"
+      - name: "Outdoor temperature 12h"
+        unique_id: vulytsia_temperatura_12h
+        unit_of_measurement: "°C"
+        device_class: temperature
+        value_template: >-
+          {% set t = value_json.hourly.temperature_2m %}
+          {{ (t | sum / t | count) | round(1) }}
+
+# ---------------------------------------------------------------- Шаблони
+template:
+  # Опалення за погодою: температура подачі з прогнозу на 12 год (лінійно між точками вулиця -> котел).
+  - sensor:
+      - name: "Heating weather target"
+        unique_id: opalennia_temp_za_pogodoiu
+        unit_of_measurement: "°C"
+        icon: mdi:home-thermometer
+        state: >-
+          {% set t = states('sensor.outdoor_temperature_12h') | float(none) %}
+          {% if t is none %}
+            {{ none }}
+          {% else %}
+            {% set pts = [[-12, 60], [-7.5, 58], [-2.5, 55], [2.5, 51], [7.5, 48], [12, 45]] %}
+            {% set ns = namespace(v=45) %}
+            {% if t <= pts[0][0] %}{% set ns.v = pts[0][1] %}
+            {% elif t >= pts[-1][0] %}{% set ns.v = pts[-1][1] %}
+            {% else %}
+              {% for i in range(pts | length - 1) %}
+                {% set a = pts[i] %}{% set b = pts[i + 1] %}
+                {% if a[0] <= t <= b[0] %}
+                  {% set ns.v = a[1] + (t - a[0]) * (b[1] - a[1]) / (b[0] - a[0]) %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+            {{ ns.v | round(0) | int }}
+          {% endif %}
+
+      # ModulationDesired тримає 25% навіть коли пальник стоїть -> 0 без полум'я
+      - name: "Котел: Навантаження фактичне"
+        unique_id: kotel_navantazhennia_faktychne
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: mdi:fire
+        state: >-
+          {% if is_state('binary_sensor.kotel_polum_ia', 'on') %}
+            {{ states('sensor.kotel_navantazhennia_moduliatsiia') | float(0) }}
+          {% else %}
+            0
+          {% endif %}
+
+      # Розрахункова витрата газу. 28 кВт = Qmax по ГВП-контуру (паспорт 24/28),
+      # 9.65 кВт·год/м³ — підібрано під реальний лічильник (похибка ~2 %/добу).
+      - name: "Котел: Розрахункова витрата газу"
+        unique_id: kotel_rozrahunkova_vytrata_gazu
+        unit_of_measurement: "m³/h"
+        icon: mdi:fire
+        state_class: measurement
+        state: >-
+          {% set modulation = states('sensor.kotel_navantazhennia_moduliatsiia') | float(0) %}
+          {% set max_gas_kw = 28 %}
+          {% set calorific_kwh_m3 = 9.65 %}
+          {% if is_state('binary_sensor.kotel_polum_ia', 'on') %}
+            {{ ((modulation / 100) * max_gas_kw / calorific_kwh_m3) | round(3) }}
+          {% else %}
+            0
+          {% endif %}
+
+  # Пальник на ГВП (полум'я + водорозбір) і перегрів ГВП (подача ≥ 85 °C під час розбору
+  # або до 90 с після — пік часто вже після закриття крана).
+  - binary_sensor:
+      - name: "Котел: пальник на ГВП"
+        unique_id: kotel_burner_hwc
+        icon: mdi:fire
+        state: >-
+          {{ is_state('binary_sensor.kotel_polum_ia', 'on') and states('sensor.kotel_vitrata_gariachoi_vodi') | float(0) > 0 }}
+      - name: "Котел: перегрів ГВП"
+        unique_id: kotel_hwc_overheat
+        icon: mdi:thermometer-alert
+        delay_off: "00:02:00"
+        state: >-
+          {% set burn = states.binary_sensor.kotel_palnik_na_gvp %}
+          {% set recent = burn is not none and (burn.state == 'on' or (now() - burn.last_changed).total_seconds() < 90) %}
+          {{ (recent or states('sensor.kotel_vitrata_gariachoi_vodi') | float(0) > 0) and states('sensor.kotel_temperatura_podachi_fakt') | float(0) >= 85 }}
+
+# ---------------------------------------------------------------- Лічильники
+sensor:
+  - platform: history_stats
+    name: "Котел: запусків ГВП сьогодні"
+    unique_id: kotel_hwc_starts_today
+    entity_id: binary_sensor.kotel_palnik_na_gvp
+    state: "on"
+    type: count
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: "Котел: запусків ГВП за годину"
+    unique_id: kotel_hwc_starts_1h
+    entity_id: binary_sensor.kotel_palnik_na_gvp
+    state: "on"
+    type: count
+    end: "{{ now() }}"
+    duration:
+      hours: 1
+  - platform: history_stats
+    name: "Котел: перегрівів ГВП сьогодні"
+    unique_id: kotel_hwc_overheats_today
+    entity_id: binary_sensor.kotel_peregriv_gvp
+    state: "on"
+    type: count
+    start: "{{ today_at('00:00') }}"
+    end: "{{ now() }}"
+  - platform: history_stats
+    name: "Котел: перегрівів ГВП за 7 днів"
+    unique_id: kotel_hwc_overheats_7d
+    entity_id: binary_sensor.kotel_peregriv_gvp
+    state: "on"
+    type: count
+    end: "{{ now() }}"
+    duration:
+      days: 7
+
+  - platform: integration
+    source: sensor.kotel_rozrakhunkova_vitrata_gazu
+    name: "Котел: Витрачено газу (розрахунково)"
+    unique_id: kotel_vytracheno_gazu_rozrahunkovo
+    round: 3
+    method: left
+
+  - platform: integration
+    source: sensor.kotel_vitrata_gariachoi_vodi
+    name: "Kotel HWC Water Volume"
+    unique_id: kotel_hwc_water_volume
+    unit_time: min
+    round: 3
+    method: left
+
+utility_meter:
+  kotel_water_daily:
+    source: sensor.kotel_hwc_water_volume
+    cycle: daily
+  kotel_water_monthly:
+    source: sensor.kotel_hwc_water_volume
+    cycle: monthly
+  kotel_gas_daily:
+    source: sensor.kotel_vitracheno_gazu_rozrakhunkovo
+    cycle: daily
+  kotel_gas_monthly:
+    source: sensor.kotel_vitracheno_gazu_rozrakhunkovo
+    cycle: monthly
+
+# Автодискавері ebusd створює 1000+ сутностей — не писати їх у базу
+recorder:
+  exclude:
+    entity_globs:
+      - "*.ebusd_bai_*"
+
+# ---------------------------------------------------------------- Автоматизації
+automation:
+  - id: opalennia_za_pogodoiu_2026
+    alias: "Опалення за погодою"
+    description: "Поки перемикач увімкнений, HA задає температуру подачі за прогнозом (через setmode-sync). Вимкнули — керування повертається панелі."
+    mode: queued
+    triggers:
+      - trigger: state
+        entity_id: input_boolean.opalennia_za_pogodoiu
+        id: toggle
+      - trigger: state
+        entity_id: sensor.heating_weather_target
+      - trigger: time_pattern
+        minutes: "/30"
+      - trigger: homeassistant
+        event: start
+    actions:
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: toggle
+              - condition: state
+                entity_id: input_boolean.opalennia_za_pogodoiu
+                state: "off"
+            sequence:
+              - action: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.boiler_heating_switch
+          - conditions:
+              - condition: state
+                entity_id: input_boolean.opalennia_za_pogodoiu
+                state: "on"
+              - condition: template
+                value_template: "{{ states('sensor.heating_weather_target') | is_number }}"
+            sequence:
+              - if:
+                  - condition: template
+                    value_template: "{{ states('input_number.boiler_heating_temp') | float(0) != states('sensor.heating_weather_target') | float(0) }}"
+                then:
+                  - action: input_number.set_value
+                    target:
+                      entity_id: input_number.boiler_heating_temp
+                    data:
+                      value: "{{ states('sensor.heating_weather_target') | float }}"
+              - if:
+                  - condition: state
+                    entity_id: input_boolean.boiler_heating_switch
+                    state: "off"
+                then:
+                  - action: input_boolean.turn_on
+                    target:
+                      entity_id: input_boolean.boiler_heating_switch
+
+  - id: kotel_termostaty_komandy
+    alias: "Котел: термостати -> ручні хелпери"
+    description: "Круглі термостати лише переставляють ручні тумблери/повзунки. Вимкнення опалення вимикає і 'Опалення за погодою'."
+    mode: queued
+    max: 10
+    triggers:
+      - trigger: mqtt
+        topic: "ha/kotel/opalennia/mode/set"
+        id: op_mode
+      - trigger: mqtt
+        topic: "ha/kotel/opalennia/temp/set"
+        id: op_temp
+      - trigger: mqtt
+        topic: "ha/kotel/gvp/mode/set"
+        id: gvp_mode
+      - trigger: mqtt
+        topic: "ha/kotel/gvp/temp/set"
+        id: gvp_temp
+    actions:
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: op_mode
+            sequence:
+              - if:
+                  - condition: template
+                    value_template: "{{ trigger.payload == 'heat' }}"
+                then:
+                  - action: input_boolean.turn_on
+                    target:
+                      entity_id: input_boolean.boiler_heating_switch
+                else:
+                  - action: input_boolean.turn_off
+                    target:
+                      entity_id:
+                        - input_boolean.opalennia_za_pogodoiu
+                        - input_boolean.boiler_heating_switch
+          - conditions:
+              - condition: trigger
+                id: op_temp
+            sequence:
+              - action: input_number.set_value
+                target:
+                  entity_id: input_number.boiler_heating_temp
+                data:
+                  value: "{{ [[trigger.payload | float(45), 35] | max, 60] | min | round(0) }}"
+          - conditions:
+              - condition: trigger
+                id: gvp_mode
+            sequence:
+              - action: "input_boolean.turn_{{ 'on' if trigger.payload == 'heat' else 'off' }}"
+                target:
+                  entity_id: input_boolean.zapit_na_gvp_kotla
+          - conditions:
+              - condition: trigger
+                id: gvp_temp
+            sequence:
+              - action: input_number.set_value
+                target:
+                  entity_id: input_number.temperatura_gvp_kotla
+                data:
+                  value: "{{ [[trigger.payload | float(43), 35] | max, 55] | min | round(0) }}"
+      # Якщо значення не змінилось (уперлося в межу) — однаково оновити стан термостата
+      - delay:
+          seconds: 1
+      - event: kotel_termostaty_refresh
+
+  - id: kotel_termostaty_stan
+    alias: "Котел: стан термостатів у MQTT"
+    mode: queued
+    max: 5
+    triggers:
+      - trigger: state
+        entity_id:
+          - input_boolean.boiler_heating_switch
+          - input_number.boiler_heating_temp
+          - input_boolean.zapit_na_gvp_kotla
+          - input_number.temperatura_gvp_kotla
+          - binary_sensor.kotel_polum_ia
+          - binary_sensor.kotel_palnik_na_gvp
+      - trigger: event
+        event_type: kotel_termostaty_refresh
+      - trigger: homeassistant
+        event: start
+      - trigger: time_pattern
+        minutes: "/10"
+    actions:
+      - variables:
+          flame: "{{ is_state('binary_sensor.kotel_polum_ia', 'on') }}"
+          dhw: "{{ is_state('binary_sensor.kotel_palnik_na_gvp', 'on') }}"
+          msgs:
+            - topic: ha/kotel/opalennia/mode
+              payload: "{{ 'heat' if is_state('input_boolean.boiler_heating_switch', 'on') else 'off' }}"
+            - topic: ha/kotel/opalennia/temp
+              payload: "{{ states('input_number.boiler_heating_temp') }}"
+            - topic: ha/kotel/opalennia/action
+              payload: "{{ 'heating' if flame and not dhw else ('idle' if is_state('input_boolean.boiler_heating_switch', 'on') else 'off') }}"
+            - topic: ha/kotel/gvp/mode
+              payload: "{{ 'heat' if is_state('input_boolean.zapit_na_gvp_kotla', 'on') else 'off' }}"
+            - topic: ha/kotel/gvp/temp
+              payload: "{{ states('input_number.temperatura_gvp_kotla') }}"
+            - topic: ha/kotel/gvp/action
+              payload: "{{ 'heating' if flame and dhw else ('idle' if is_state('input_boolean.zapit_na_gvp_kotla', 'on') else 'off') }}"
+      - repeat:
+          for_each: "{{ msgs }}"
+          sequence:
+            - action: mqtt.publish
+              data:
+                topic: "{{ repeat.item.topic }}"
+                payload: "{{ repeat.item.payload }}"
+                retain: true
+
+  - id: kotel_error_alert_2026
+    alias: "Котел: Сповіщення про несправність"
+    description: "Тривога на телефон при появі коду помилки котла і сповіщення при поверненні в норму."
+    mode: queued
+    triggers:
+      - trigger: state
+        entity_id: sensor.kotel_potochna_pomilka
+        id: error_detected
+      - trigger: state
+        entity_id: sensor.kotel_potochna_pomilka
+        to: "Немає"
+        id: error_cleared
+    actions:
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: error_detected
+              - condition: template
+                value_template: "{{ trigger.to_state.state not in ['Немає','unknown','unavailable'] }}"
+            sequence:
+              - action: notify.mobile_app_YOUR_PHONE
+                data:
+                  title: "⚠️ Несправність котла"
+                  message: "Код помилки: {{ trigger.to_state.state }}"
+                  data:
+                    priority: high
+                    ttl: 0
+                    channel: alarm_stream
+                    tag: kotel_error
+              - action: persistent_notification.create
+                data:
+                  title: "Несправність котла"
+                  message: "Код помилки: {{ trigger.to_state.state }}"
+          - conditions:
+              - condition: trigger
+                id: error_cleared
+              - condition: template
+                value_template: "{{ trigger.from_state is not none and trigger.from_state.state not in ['Немає','unknown','unavailable'] }}"
+            sequence:
+              - action: notify.mobile_app_YOUR_PHONE
+                data:
+                  title: "✅ Котел: помилку усунено"
+                  message: "Була помилка: {{ trigger.from_state.state }}. Зараз — норма."
+                  data:
+                    tag: kotel_error
+
+  - id: kotel_stb_trip_alert_2026
+    alias: "Котел: Спрацювання термообмежувача (STB)"
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: sensor.kotel_spratsiuvannia_termoobmezhuvacha_stb
+    conditions:
+      - condition: template
+        value_template: >-
+          {{ trigger.from_state is not none and trigger.to_state is not none
+             and trigger.from_state.state not in ['unknown','unavailable']
+             and trigger.to_state.state not in ['unknown','unavailable']
+             and trigger.to_state.state | float(0) > trigger.from_state.state | float(0) }}
+    actions:
+      - action: notify.mobile_app_YOUR_PHONE
+        data:
+          title: "🚨 Спрацював термообмежувач котла (STB)!"
+          message: "Лічильник спрацювань: {{ trigger.to_state.state }}. Перевірте котел негайно."
+          data:
+            priority: high
+            ttl: 0
+            channel: alarm_stream
+            tag: kotel_stb
+
+  - id: kotel_no_connection_alert_2026
+    alias: "Котел: Немає зв'язку"
+    description: "Тривога, якщо ebusd не працює, немає сигналу eBUS або дані з котла не оновлюються понад 10 хв."
+    mode: single
+    triggers:
+      - trigger: state
+        entity_id: binary_sensor.ebusd_global_signal
+        to: "off"
+        for:
+          minutes: 5
+        id: lost
+      - trigger: state
+        entity_id: binary_sensor.ebusd_global_running
+        to: "off"
+        for:
+          minutes: 5
+        id: lost
+      - trigger: template
+        value_template: >-
+          {{ states('sensor.kotel_tisk_vodi') in ['unknown','unavailable']
+             or (now() - states.sensor.kotel_tisk_vodi.last_reported) > timedelta(minutes=10) }}
+        for:
+          minutes: 1
+        id: lost
+      - trigger: template
+        value_template: >-
+          {{ is_state('binary_sensor.ebusd_global_signal','on')
+             and is_state('binary_sensor.ebusd_global_running','on')
+             and states('sensor.kotel_tisk_vodi') not in ['unknown','unavailable']
+             and (now() - states.sensor.kotel_tisk_vodi.last_reported) < timedelta(minutes=2) }}
+        for:
+          minutes: 2
+        id: restored
+    actions:
+      - choose:
+          - conditions:
+              - condition: trigger
+                id: lost
+              - condition: template
+                value_template: "{{ not is_state('input_boolean.kotel_zv_iazok_vtracheno','on') }}"
+            sequence:
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.kotel_zv_iazok_vtracheno
+              - action: notify.mobile_app_YOUR_PHONE
+                data:
+                  title: "📡 Немає зв'язку з котлом"
+                  message: >-
+                    Сигнал eBUS: {{ states('binary_sensor.ebusd_global_signal') }},
+                    ebusd: {{ states('binary_sensor.ebusd_global_running') }},
+                    останні дані: {{ relative_time(states.sensor.kotel_tisk_vodi.last_reported) }} тому.
+                  data:
+                    priority: high
+                    ttl: 0
+                    channel: alarm_stream
+                    tag: kotel_conn
+          - conditions:
+              - condition: trigger
+                id: restored
+              - condition: state
+                entity_id: input_boolean.kotel_zv_iazok_vtracheno
+                state: "on"
+            sequence:
+              - action: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.kotel_zv_iazok_vtracheno
+              - action: notify.mobile_app_YOUR_PHONE
+                data:
+                  title: "✅ Зв'язок з котлом відновлено"
+                  message: "Дані з котла знову надходять."
+                  data:
+                    tag: kotel_conn
